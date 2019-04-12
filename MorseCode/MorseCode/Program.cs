@@ -13,7 +13,35 @@ namespace MorseCode
         {
 
         }
-
+        static string Encode(string message, Dictionary<char, string> dict)
+        {
+            char[] charArr = message.ToUpper().ToCharArray();
+            string encoded = "";
+            for (int i = 0; i < message.Length; i++)
+            {
+                try
+                {
+                    encoded += dict[charArr[i]];
+                    encoded += " ";
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Invalid character(s)");
+                }
+            }
+            return encoded;
+        }
+        static string Decode(string message, Dictionary<char, string> dict)
+        {
+            string[] stringArr = message.Split();
+            string decoded = "";
+            for (int i = 0; i < stringArr.Length; i++)
+            {
+                var letter = dict.FirstOrDefault(x => x.Value == stringArr[i]).Key;
+                decoded += letter;
+            }
+            return decoded;
+        }
         static void BeepBoop(string message)
         {
             int freq = 800;
