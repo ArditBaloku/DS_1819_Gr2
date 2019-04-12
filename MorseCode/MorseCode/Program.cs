@@ -11,7 +11,62 @@ namespace MorseCode
     {
         static void Main(string[] args)
         {
+            var morseChar = new Dictionary<char, string>()
+            {
+                {'A', ".-"},
+                {'B', "-..."},
+                {'C', "-.-."},
+                {'D', "-.."},
+                {'E', "."},
+                {'F', "..-."},
+                {'G', "--."},
+                {'H', "...."},
+                {'I', ".."},
+                {'J', ".---"},
+                {'K', "-.-"},
+                {'L', ".-.."},
+                {'M', "--"},
+                {'N', "-."},
+                {'O', "---"},
+                {'P', ".--."},
+                {'Q', "--.-"},
+                {'R', ".-."},
+                {'S', "..."},
+                {'T', "-"},
+                {'U', "..-"},
+                {'V', "...-"},
+                {'W', ".--"},
+                {'X', "-..-"},
+                {'Y', "-.--"},
+                {'Z', "--.."},
+                {'1', ".----"},
+                {'2', "..---"},
+                {'3', "...--"},
+                {'4', "....-"},
+                {'5', "....."},
+                {'6', "-...."},
+                {'7', "--..."},
+                {'8', "---.."},
+                {'9', "----."},
+                {'0', "-----"},
+                {' ', "/"},
+            };
 
+            if (args.Length > 0)
+            {
+                if (args[0] == "encode")
+                {
+                    Console.WriteLine(Encode(string.Join(" ", args.Skip(1)), morseChar));
+                }
+                else if (args[0] == "decode")
+                {
+                    Console.WriteLine(Decode(string.Join(" ", args.Skip(1)), morseChar));
+                }
+                else if (args[0] == "beep")
+                {
+                    BeepBoop(Encode(string.Join(" ", args.Skip(1)), morseChar));
+                }
+            }
         }
         static string Encode(string message, Dictionary<char, string> dict)
         {
