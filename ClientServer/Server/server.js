@@ -2,6 +2,8 @@ const server = require('dgram').createSocket('udp4');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
 const convert = require('xml-js');
+const jwt = require('jsonwebtoken');
+const privateKey = fs.readFileSync('private.key');
 
 server.bind(3000);
 
@@ -22,7 +24,7 @@ server.on('message', (msg, rinfo) => {
     break;
     case 'login': authenticate(msg, rinfo);
     break;
-    default: server.send(Buffer.from('ERROR'), rinfo.port, rinfo.address);
+    default: server.send(Buffer.from(JSON.stringify({type: 'err', info: 'ERROR'})), rinfo.port, rinfo.address);
     break;
   }
 });
@@ -40,7 +42,7 @@ function createUser(user, rinfo) {
 
   for (let i = 0; i < usernames.length; i++) {
     if (usernames[i] == user.username) {
-      server.send(Buffer.from('USERNAME ALREADY EXISTS'), rinfo.port, rinfo.address);
+      server.send(Buffer.from(JSON.stringify({type: 'register_err', info: 'USERNAME ALREADY EXISTS'})), rinfo.port, rinfo.address);
       return;
     }
   }
@@ -51,11 +53,11 @@ function createUser(user, rinfo) {
 
   fs.writeFile("database.xml", xmlDb, (err) => {
     if (err) {
-      server.send(Buffer.from('ERROR IN USER CREATION'), rinfo.port, rinfo.address);
+      server.send(Buffer.from(JSON.stringify({type: 'register_err', info: 'ERROR IN USER CREATION'})), rinfo.port, rinfo.address);
       return;
     }
   });
-  server.send(Buffer.from('USER CREATED'), rinfo.port, rinfo.address);
+  server.send(Buffer.from(JSON.stringify({type: 'register_ok', info: 'USER CREATED'})), rinfo.port, rinfo.address);
 }
 
 function authenticate(user, rinfo) {
@@ -74,18 +76,18 @@ function authenticate(user, rinfo) {
       bcrypt.compare(user.password, passwords[i], function(err, res) {
         if (res) {
           delete users[i].password;
-          const userInfo = convert.js2xml(users[i], options);
-          server.send(Buffer.from(userInfo), rinfo.port, rinfo.address);
+          const token = jwt.sign(users[i], privateKey, {algorithm: 'RS256'});
+          server.send(Buffer.from(JSON.stringify({type: 'login_ok', info: token})), rinfo.port, rinfo.address);
         }
         else {
-          server.send(Buffer.from('WRONG USERNAME OR PASSWORD'), rinfo.port, rinfo.address);
+          server.send(Buffer.from(JSON.stringify({type: 'login_err', info: 'WRONG USERNAME OR PASSWORD'})), rinfo.port, rinfo.address);
         }
       });
       return;
     }
   }
 
-  server.send(Buffer.from('WRONG USERNAME OR PASSWORD'), rinfo.port, rinfo.address);
+  server.send(Buffer.from(JSON.stringify({type: 'login_err', info: 'WRONG USERNAME OR PASSWORD'})), rinfo.port, rinfo.address);
 }
 
 function toArray(arg) {

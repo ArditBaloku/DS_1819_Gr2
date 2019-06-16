@@ -1,5 +1,9 @@
 const client = require('dgram').createSocket('udp4');
+const fs = require('fs');
+const convert = require('xml-js');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const publicKey = fs.readFileSync('publickey.pem');
 const saltRounds = 10;
 const [node, file, command, ...args] = process.argv;
 
@@ -49,7 +53,21 @@ client.on('error', (err) => {
 })
 
 client.on('message', (msg) => {
-  console.log('Message received:\n' + msg);
+  const message = JSON.parse(msg.toString('utf8'));
+  if(message.type == 'login_ok') {
+    jwt.verify(message.info, publicKey, function(err, decoded) {
+      if (err) {
+        console.log("JWT from the server is invalid");
+      }
+      else {
+        const options = {compact: true, ignoreComment: true, spaces: 2};
+        const userInfo = convert.js2xml(decoded, options);
+        console.log("JWT is valid, message received:\n" + userInfo)
+      }
+    });
+  } else {
+    console.log('Message received:\n' + message.info);
+  }
   process.exit();
 })
 
