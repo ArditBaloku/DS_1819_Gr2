@@ -2,10 +2,12 @@ const client = require('dgram').createSocket('udp4');
 const fs = require('fs');
 const convert = require('xml-js');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const publicKey = fs.readFileSync('publickey.pem');
 const saltRounds = 10;
 const [node, file, command, ...args] = process.argv;
+var key;
 
 switch(command) {
   case 'register': register(args[0], args[1], args[2], args[3], args[4]);
@@ -33,7 +35,7 @@ function register(username, password, id, faculty, average) {
         id,
         faculty,
         average}));
-    client.send(msg, 3000, 'localhost');
+    sendEncrypted(msg, 3000, 'localhost');
   });
 
 }
@@ -45,7 +47,7 @@ function login(username, password) {
   }
 
   let msg = Buffer.from(JSON.stringify({request: 'login', username, password}));
-  client.send(msg, 3000, 'localhost')
+  sendEncrypted(msg, 3000, 'localhost')
 }
 
 client.on('error', (err) => {
@@ -53,16 +55,14 @@ client.on('error', (err) => {
 })
 
 client.on('message', (msg) => {
-  const message = JSON.parse(msg.toString('utf8'));
+  const message = JSON.parse(decrypt(msg));
   if(message.type == 'login_ok') {
     jwt.verify(message.info, publicKey, function(err, decoded) {
       if (err) {
         console.log("JWT from the server is invalid");
       }
       else {
-        const options = {compact: true, ignoreComment: true, spaces: 2};
-        const userInfo = convert.js2xml(decoded, options);
-        console.log("JWT is valid, message received:\n" + userInfo)
+        console.log("JWT is valid, message received:\n", decoded);
       }
     });
   } else {
@@ -85,4 +85,28 @@ function validate(...args) {
     }
   }
   return true;
+}
+
+function sendEncrypted(message, port, ip) {
+  const [encrypted, iv, rsaEncryptedKey] = encodeDesCBC(message);
+  client.send(Buffer.from(iv + "." + rsaEncryptedKey + "." + encrypted, 'utf8'), port, ip);
+}
+
+function decrypt(message) {
+  // console.log('Decrypting message', message.toString('utf8'))
+  const [iv, encrypted] = message.toString('utf8').split(".");
+  const decrypted = crypto.createDecipheriv('des-cbc', Buffer.from(key), Buffer.from(iv, 'base64'));
+  let d = decrypted.update(encrypted, 'base64', 'utf8');
+  d += decrypted.final('utf8');
+  return d;
+}
+
+function encodeDesCBC(textToEncode) {
+  key = crypto.randomBytes(8);
+  const iv = crypto.randomBytes(8);
+  const cipher = crypto.createCipheriv('des-cbc', key, iv);
+  let c = cipher.update(textToEncode, 'utf8', 'base64');
+  c += cipher.final('base64');
+  const rsaEncryptedKey = crypto.publicEncrypt(publicKey, key).toString('base64');
+  return [c, iv.toString('base64'), rsaEncryptedKey];
 }

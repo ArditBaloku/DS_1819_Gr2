@@ -6,11 +6,4 @@
     <faculty>fiek</faculty>
     <average>9</average>
   </user>
-  <user>
-    <username>ardit2</username>
-    <password>$2b$10$zlX7yL2cDuSrR2yd0DE..Of73dfoNBXsRMuAk8xIVKqhZG3Tj3NIe</password>
-    <id>1</id>
-    <faculty>fiek</faculty>
-    <average>9</average>
-  </user>
 </db>
