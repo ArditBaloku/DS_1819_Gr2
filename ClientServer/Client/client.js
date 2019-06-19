@@ -1,6 +1,5 @@
 const client = require('dgram').createSocket('udp4');
 const fs = require('fs');
-const convert = require('xml-js');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -27,7 +26,7 @@ function register(username, password, id, faculty, average) {
   }
 
   bcrypt.hash(password, saltRounds, function(err, hash) {
-    let msg = Buffer
+    const msg = Buffer
       .from(JSON.stringify({
         request: 'register',
         username,
@@ -46,7 +45,7 @@ function login(username, password) {
     process.exit();
   }
 
-  let msg = Buffer.from(JSON.stringify({request: 'login', username, password}));
+  const msg = Buffer.from(JSON.stringify({request: 'login', username, password}));
   sendEncrypted(msg, 3000, 'localhost')
 }
 
@@ -93,7 +92,6 @@ function sendEncrypted(message, port, ip) {
 }
 
 function decrypt(message) {
-  // console.log('Decrypting message', message.toString('utf8'))
   const [iv, encrypted] = message.toString('utf8').split(".");
   const decrypted = crypto.createDecipheriv('des-cbc', Buffer.from(key), Buffer.from(iv, 'base64'));
   let d = decrypted.update(encrypted, 'base64', 'utf8');

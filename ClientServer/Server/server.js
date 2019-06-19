@@ -20,7 +20,6 @@ server.on('error', (err) => {
 
 server.on('message', (msg, rinfo) => {
   const [message, key, iv] = decrypt(msg);
-  console.log('Got message', message)
   let info = JSON.parse(message);
   switch(info.request) {
     case 'register': createUser(info, rinfo, key, iv);
@@ -33,7 +32,8 @@ server.on('message', (msg, rinfo) => {
 });
 
 function createUser(user, rinfo, key, iv) {
-  delete user['request'];
+  delete user.request;
+
   let xmlDb = fs.readFileSync('database.xml', (err, data) => {
     if (err) console.log(err.stack);
   }).toString();
@@ -54,12 +54,13 @@ function createUser(user, rinfo, key, iv) {
   jsonDb.db.user = users;
   xmlDb = convert.js2xml(jsonDb, options);
 
-  fs.writeFile("database.xml", xmlDb, (err) => {
+  fs.writeFileSync("database.xml", xmlDb, (err) => {
     if (err) {
       sendEncrypted({type: 'register_err', info: 'ERROR IN USER CREATION'}, rinfo.port, rinfo.address, key, iv);
       return;
     }
   });
+
   sendEncrypted({type: 'register_ok', info: 'USER CREATED'}, rinfo.port, rinfo.address, key, iv);
 }
 
@@ -74,6 +75,7 @@ function authenticate(user, rinfo, key, iv) {
   const users = toArray(jsonDb.db.user);
   const usernames = users.map(u => u.username._text);
   const passwords = users.map(u => u.password._text);
+
   for (let i = 0; i < usernames.length; i++) {
     if (usernames[i] == user.username) {
       bcrypt.compare(user.password, passwords[i], function(err, res) {

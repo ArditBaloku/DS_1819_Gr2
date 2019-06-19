@@ -6,4 +6,18 @@
     <faculty>fiek</faculty>
     <average>9</average>
   </user>
+  <user>
+    <username>anzotika</username>
+    <password>$2b$10$SDfXXWxLjyCMFl3d7mZbMe6s4kWHlsrpJuS2ATlWlmfJ.BnnexqIW</password>
+    <id>170714100044</id>
+    <faculty>FIEK</faculty>
+    <average>7</average>
+  </user>
+  <user>
+    <username>arbena</username>
+    <password>$2b$10$blKaJ6DYZ4rYdT58AtZqAeIFA4U4SdDkQjFWoyCQLCYTpLyZUstI2</password>
+    <id>170714100093</id>
+    <faculty>FIEK</faculty>
+    <average>8</average>
+  </user>
 </db>
